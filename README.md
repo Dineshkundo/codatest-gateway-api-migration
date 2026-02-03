@@ -543,3 +543,64 @@ spec:
       maxStreamDuration: 60s
 ```
 ✅ 4️⃣ VALIDATION (PROOF IT WORKS)
+# 4.1 Gateway Health
+```
+kubectl get gateway coda-gateway -n codatest
+```
+✔ Accepted = True
+✔ Programmed = True
+
+# 4.2 LoadBalancer IP Validation
+```
+kubectl get svc -n envoy-gateway-system
+```
+```
+ EXTERNAL-IP: 10.0.8.57
+```
+
+✔ Same IP as Ingress
+
+# 4.3 Backend Validation (Real Traffic)
+```
+curl -I http://10.0.8.57 \
+  -H "Host: testparticipant.afmsagaftrafund.org"
+```
+```
+Result:
+
+301 → HTTPS
+
+curl -I https://testparticipant.afmsagaftrafund.org/actuator/health
+
+200 OK
+
+```
+✔ Routing correct
+✔ TLS working
+
+#⚠️ 5️⃣ ISSUES FACED & HOW I FIXED THEM
+```
+Issue	Cause	Resolution
+503 on cache	Redis down	App-level issue
+401 on security	Auth enforced	Expected
+EndpointsNotFound	Pod not ready	Verified endpoints
+Redirect not working	Wrong status	Used 301
+```
+📊 6️⃣ BEFORE vs AFTER COMPARISON
+| Aspect       | Ingress     | Gateway API |
+| ------------ | ----------- | ----------- |
+| Config style | Annotations | Typed CRDs  |
+| Readability  | ❌ Hard     | ✅ Clear  |
+| Scaling      | ❌ Risky    | ✅ Safe   |
+| TLS          | Mixed        | Centralized |
+| Future-proof | ❌ No        | ✅ Yes    |
+
+🏁 7️⃣ FINAL CONCLUSION (MANAGER-READY)
+
+✅ Successfully migrated Codatest cluster from NGINX Ingress to Gateway API (Envoy)
+✅ Maintained same LoadBalancer IP
+✅ Zero DNS change
+✅ Fully validated via live traffic
+✅ Rollback preserved
+
+📌 This migration is production-safe and repeatable
